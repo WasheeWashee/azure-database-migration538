@@ -12,6 +12,7 @@
 6. [Milestone 5](#milestone5)
 7. [Milestone 6](#milestone6)
 8. [Milestone 7](#milestone7)
+9. [Closing Thoughts}(#conclusion)
 
 ### Introduction <a name="introduction"></a>
 The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This will involve the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we will ensure the security of the uploaded database through data backups/restores, and create a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions. By doing all of this, we hope to have created a 
@@ -91,12 +92,36 @@ Three changes were selected in order to mimic a disaster scenario where the inte
 
 We verified that the above changes had indeed been implementing by selecting the top 1000 rows of the affected tables and observing the areas of interest.
 
-#### Restoring the Database from Azure SQL Database Backup
+#### Restoring the Database from Azure SQL Database Backup (Task 2)
 
 We can restore the database from a historical version of itself using the Azure portal. We select the "migration-project-database" database, and then the **Restore** option, opening a Restore window. Here, we can select a restore point - we chose an hour before the corrupting changes had been made, and a name for the newly restored database - we chose "migration-project-database-restored". The rest of the parameters were left as default, and after a review, we created the backup database. We verified that this was successful by returning to Azure Data Studio in our VM, connecting to the newly created "migration-project-database-restored" database and comparing the data in the critically changed areas. As expected, the data did not contain the corrupting changes, and we had successfully restored the database to a point before the disaster. It is important to note that, since the first production database had been corrupted, that we would be using the "migration-project-database-restored" database as the production database from this point onwards.
 
-### Milestone 6: Geo Replication and Failover:
+### Milestone 6: Geo Replication and Failover
 
 By configuring a geo replica of our production database, we improve the data protection and availability of our database by adding an extra layer of redundancy in another geographic location. We can configure georeplication for the production database by going to the Azure portal, selecting the "migration-project-database-restored" database, and selecting the **Replicas** tab under Data Management. Then we select **Create replica** to open a Geo Replica menu. We need to createa  new SQL Server, as the replica database will be hosted in another geographic location, so we name it "migration-replication-server", and set it to be located in the East US. After this, we could finalise the creation of the geo replica. Once it was successfully created, we could test the functionality of the replica by performing a **failover**, where we seamlessly switch from the primary server in the UK to the backup in the US. In order to do this, we first needed to create a failover group, which can be done after selecting our "migration-database-server" SQL server, and clicking **Failover groups > Add groups**. We named this "migrationfailovergroup", and assigned its secondary server as the "migration-replication-server". The rest of the settings were left as default, and the failover group finalised. Accessing "migrationfailovergroup", we can finally perform a failover in order to verify the functionality of the replica. We executed a failover, and accept that the secondary database will be switched to a primary role. We then verified in the VM that we can connect to the primary database using the connection details of the secondary server, and ran basic queries to check that the functionality was unchanged. Finishing these checks, we then performed a second failover to revert the servers to their initial roles.
 
+### Milestone 7: Microsoft Entra Directory Integration
+
+In this milestone, we aimed to integrate Microsoft Entra Directory into our Azure SQL Database architecture. This gives us a more streamlined way to manage who has permissions to perform certain operations on the data, utilising core security concepts such as Role Based Access Control (RBAC) and the Principle of Least Privilege.
+
+#### Integrating Microsoft Entra ID with Azure SQL Database
+
+Before assigning any roles, we first needed to enable Microsoft Entra, and thus assign a Microsoft Entra Admin for our "migration-database-server". We did this by selecting **Security > Microsoft Entra > Set admin**, finding my account, and assigning it as the admin for this server. Returning to the VM, we would then want to reconnect to the production database as the server admin. We do this by disconnecting from the database, and attempting to reconnect. However, instead of using SQL Login as the authetnication method, we used Azure Active Directory instead. This returned a drop down menu, where we were able to add our admin account. The rest of the details were kept the same, and we were able to successfully reconnect to the production database as an admin.
+
+#### Creating a DB Reader User
+
+A DB Reader user is a default role for Microsoft Entra users, granting them read-only access to the database, meaning they can view data, but not modify it. There are other default roles too, like DB Writer, who can rewrite and modify the data, and the DB Owner, who can modify schema and grant permissions to other users, but for the purpose of testing within this project, we created a DB Reader user. In order to do this, we would create a new user, and assign it the DB Reader role in a query:
+
+```
+CREATE USER [DB_Reader_DChen@aicoreusers.onmicrosoft.com] FROM EXTERNAL PROVIDER;
+ALTER ROLE db_datareader ADD MEMBER [DB_Reader_DChen@aicoreusers.onmicrosoft.com];
+```
+
+In order to ensure that this newly created user has the correct permissions, we can again disconnect from the production database, and reconnect using the DB Reader's details. First, we checked that the user has the ability to view the data contained within the database. This was quickly verified by choosing any table in the database, and selecting the top 1000 entries, finding that the table appeared as expected. However, if we tried to modify or delete anything from any of the tables, we find that the following error was returned:
+
+```
+The DELETE permission was denied on the object 'Person.Address', database 'migration-project-database-restored', schema '???'
+```
+
+This confirms that the user does not have the permission to edit or delete any of the data, verifying that the newly created user has all of the expected permissions of the DB Reader role.
 
