@@ -38,7 +38,7 @@ Finally, we created the production database by restoring it from a provided back
 
 ### Milestone 3: Migrate to Azure SQL Database
 
-In this milestone, we aimed to transition the database onto Azure's cloud ecosystem through a data migration process.
+In this milestone, we aim to transition the database onto Azure's cloud ecosystem through a data migration process.
 
 #### Preparation for Migration (Tasks 1-3)
 
@@ -49,3 +49,21 @@ In order to migrate the local database onto the Azure ecosystem, we first need t
 In order to carry out the migration, we needed two Azure Data Studio extensions: SQL Server Scheme Compare, and Azure SQL Migration. We first used the SQL Server Scheme Compare extension, setting the source to the local SQL database, and the target to the Azure SQL database. We then "compare" the two, and find all of the discrepancies between the two databases. We then applied these changes, copying the struture of the local database over to its Azure counterpart - this includes the tables, views, procedures and other objects. This will form the foundation of the final migration. This is done using the latter extension, and can mostly be done by simply following the on-screen instructions. However, it should be noted that there was a point where "Integration Runtime" needed to be installed and set up using the provided authentication keys in order to allow for data integration capabilities over different network environments. Then we can select the source and target databases, and begin the migration. Once it has completed, the validity of the data transfer was verified by examining the table names and comparing a random selection of data from various tables.
 
 
+### Milestone 4: Data Backup and Restoration
+
+The purpose of this milestone is to ensure that the database and any of its backups are securely stored on Azure, as we will later perform some operations that will compromise the integrity of the data. We will also provisionIt is also good practice for companies to have two copies of databases, one for tracking real customer data (production), and another for experimentation and innovation (development).
+
+#### Initial Backup and Restoration (Tasks 1-3)
+
+The first step here was to create a backup file (.bak) of the desired database using SSMS. This is again fairly straightforward - we connect to the SQL Server hosting our on-premise database, right-click on the database, select **Tasks > Back Up**, and select the default location for the backup file to be stored. Here, we opted for a full backup, as we wanted to create an exact duplicate of the database. Next, we accessed the Azure portal in the VM using Microsoft Edge, and in a similar fashion to before, created a storage account - "migrationprojectstorage", and a container - "data-migration-backup". We chose this due to Azure Storage's seamless integration with other Azure services, as well as its high level of security and encryption in order to keep our objects safe. Then, we uploaded the on-premise backup file from the local environment into the storage account and container, so that it is ready for backup. Another Windows VM was provisioned - "azure-vm-development" to provide us with a separate environment where we can make changes to the database without worrying about compromising the production database. Within this VM, SQL Server, SSMS, and Azure Data Studio were all downloaded, and the backup was restored in a similar fashion to Milestone 2 Task 4.
+
+#### Automating Regular Backups (Task 4)
+
+In SSMS, we can ensure that there is always a backup available for any database by scheduling regular database backups using the SQL Server Agent in SSMS. Aditionally, we needed to create a SQL Server Credential, which is a security object allowing SQL Server to access external resources (in this case Azure Blob Storage) securely. We created this by connecting to the development server on SSMS, and starting a new query. Here, we executed the following:
+
+```
+CREATE CREDENTIAL datamigrationservercredential
+WITH IDENTITY = 'migrationprojectstorage'
+SECRET = '[my_access_key_here]'
+```
+where [my_access_key_here] was replaced with the secret access key provided in the storage account. After running this, we can select **Management > Maintenance Plans**, right-click Maintenance Plans and select Maintenance Plan Wizard. Here, we can schedule the frequency, timing and type of backup that we want to occur - in this case, we chose a full backup to occur every Sunday at 12:00:00am. Then, we specified that it was the (restored) AdventureWorks2022 database that we wanted to back up, and selected the "migrationprojectstorage" storage account, and the "data-migration-backup" container. The rest of the settings were left as default, and the maintenance plan was put into place. We tested the maintenance plan by manually executing it, and we can see in the Azure portal that a backup has been saved into the correct container.
