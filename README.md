@@ -7,12 +7,13 @@
     1. [Creating and Provisioning the Windows Virtual Machine (Tasks 1-2)](#M2T1-2)
     2. [SQL Server and SSMS Installation (Task 3)](#M2T3)
     3. [Restoring the Production Database (Task 4)](#M2T4)
-4. [Milestone 3](#milestone3)
-5. [Milestone 4](#milestone4) 
-6. [Milestone 5](#milestone5)
-7. [Milestone 6](#milestone6)
-8. [Milestone 7](#milestone7)
-9. [Closing Thoughts](#conclusion)
+4. [Milestone 3: Migrate to Azure SQL Database](#milestone3)
+    1. 
+6. [Milestone 4: Data Backup and Restoration](#milestone4) 
+7. [Milestone 5: Disaster Recovery Simulation](#milestone5)
+8. [Milestone 6: Geo Replication and Failover](#milestone6)
+9. [Milestone 7: Microsoft Entra Directory Integration](#milestone7)
+10. [Closing Thoughts](#conclusion)
 
 ### Introduction <a name="introduction"></a>
 The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This will involve the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we will ensure the security of the uploaded database through data backups/restores, and create a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions. By doing all of this, we hope to have created a 
@@ -49,7 +50,6 @@ In order to migrate the local database onto the Azure ecosystem, we first need t
 
 In order to carry out the migration, we needed two Azure Data Studio extensions: SQL Server Scheme Compare, and Azure SQL Migration. We first used the SQL Server Scheme Compare extension, setting the source to the local SQL database, and the target to the Azure SQL database. We then "compare" the two, and find all of the discrepancies between the two databases. We then applied these changes, copying the struture of the local database over to its Azure counterpart - this includes the tables, views, procedures and other objects. This will form the foundation of the final migration. This is done using the latter extension, and can mostly be done by simply following the on-screen instructions. However, it should be noted that there was a point where "Integration Runtime" needed to be installed and set up using the provided authentication keys in order to allow for data integration capabilities over different network environments. Then we can select the source and target databases, and begin the migration. Once it has completed, the validity of the data transfer was verified by examining the table names and comparing a random selection of data from various tables.
 
-
 ### Milestone 4: Data Backup and Restoration
 
 The purpose of this milestone is to ensure that the database and any of its backups are securely stored on Azure, as we will later perform some operations that will compromise the integrity of the data. We will also provision another VM for the purpose of development; it is good practice for companies to have two copies of databases, one for tracking real customer data (production), and another for experimentation and innovation (development).
@@ -69,7 +69,7 @@ SECRET = '[my_access_key_here]'
 ```
 where [my_access_key_here] was replaced with the secret access key provided in the storage account. After running this, we can select **Management > Maintenance Plans**, right-click Maintenance Plans and select Maintenance Plan Wizard. Here, we can schedule the frequency, timing and type of backup that we want to occur - in this case, we chose a full backup to occur every Sunday at 12:00:00am. Then, we specified that it was the (restored) AdventureWorks2022 database that we wanted to back up, and selected the "migrationprojectstorage" storage account, and the "data-migration-backup" container. The rest of the settings were left as default, and the maintenance plan was put into place. We tested the maintenance plan by manually executing it, and we can see in the Azure portal that a backup has been saved into the correct container.
 
-### Milestone 5: Disaster Recovery Simulation:
+### Milestone 5: Disaster Recovery Simulation
 
 The purpose of this milestone is to simulate a disaster recovery situation, in order to prove that the infrastructure put into place is sufficient to recover any changes or data loss made to the database.
 
