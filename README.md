@@ -14,7 +14,7 @@
 8. [Milestone 7](#milestone7)
 
 ### Introduction <a name="introduction"></a>
-The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This will involve the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we will ensure the security of the uploaded database through data backups/restores, and create a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions.
+The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This will involve the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we will ensure the security of the uploaded database through data backups/restores, and create a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions. By doing all of this, we hope to have created a 
 
 ### Milestone 1: Set up the Environment <a name="milestone1"></a>
 
@@ -51,7 +51,7 @@ In order to carry out the migration, we needed two Azure Data Studio extensions:
 
 ### Milestone 4: Data Backup and Restoration
 
-The purpose of this milestone is to ensure that the database and any of its backups are securely stored on Azure, as we will later perform some operations that will compromise the integrity of the data. We will also provisionIt is also good practice for companies to have two copies of databases, one for tracking real customer data (production), and another for experimentation and innovation (development).
+The purpose of this milestone is to ensure that the database and any of its backups are securely stored on Azure, as we will later perform some operations that will compromise the integrity of the data. We will also provision another VM for the purpose of development; it is good practice for companies to have two copies of databases, one for tracking real customer data (production), and another for experimentation and innovation (development).
 
 #### Initial Backup and Restoration (Tasks 1-3)
 
@@ -67,3 +67,30 @@ WITH IDENTITY = 'migrationprojectstorage'
 SECRET = '[my_access_key_here]'
 ```
 where [my_access_key_here] was replaced with the secret access key provided in the storage account. After running this, we can select **Management > Maintenance Plans**, right-click Maintenance Plans and select Maintenance Plan Wizard. Here, we can schedule the frequency, timing and type of backup that we want to occur - in this case, we chose a full backup to occur every Sunday at 12:00:00am. Then, we specified that it was the (restored) AdventureWorks2022 database that we wanted to back up, and selected the "migrationprojectstorage" storage account, and the "data-migration-backup" container. The rest of the settings were left as default, and the maintenance plan was put into place. We tested the maintenance plan by manually executing it, and we can see in the Azure portal that a backup has been saved into the correct container.
+
+### Milestone 5: Disaster Recovery Simulation:
+
+The purpose of this milestone is to simulate a disaster recovery situation, in order to prove that the infrastructure put into place is sufficient to recover any changes or data loss made to the database.
+
+#### Mimicking Data Loss in the Production Environment (Task 1)
+
+Three changes were selected in order to mimic a disaster scenario where the integrity of the data has been compromised. We put these changes into place by starting a new query on the production server, and executing the following:
+
+1. Change top 100 SpatialLocations to NULL from Person.Address.
+   ```
+   
+   ```
+2. Change every product's colour with an even ProductID to NULL.
+   ```
+
+   ```
+3. Delete LineTotal from Sales.SalesOrderDetail.
+   ```
+
+   ```
+
+We verified that the above changes had indeed been implementing by selecting the top 1000 rows of the affected tables and observing the areas of interest.
+
+#### Restoring the Database from Azure SQL Database Backup
+
+We can restore the database from a historical version of itself using the Azure portal. We select the "migration-project-database" database, and then the **Restore** option, opening a Restore window. Here, we can select a restore point - we chose an hour before the corrupting changes had been made, and a name for the newly restored database - we chose "migration-project-database-restored". The rest of the parameters were left as default, and after a review, we created the backup database. We verified that this was successful by returning to Azure Data Studio in our VM, connecting to the newly created "migration-project-database-restored" database and comparing the data in the critically changed areas. As expected, the data did not contain the corrupting changes, and we had successfully restored the database to a point before the disaster. It is important to note that, since the first production database had been corrupted, that we would be using the "migration-project-database-restored" database as the production database from this point onwards.
