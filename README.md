@@ -12,7 +12,7 @@
 6. [Milestone 5](#milestone5)
 7. [Milestone 6](#milestone6)
 8. [Milestone 7](#milestone7)
-9. [Closing Thoughts}(#conclusion)
+9. [Closing Thoughts](#conclusion)
 
 ### Introduction <a name="introduction"></a>
 The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This will involve the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we will ensure the security of the uploaded database through data backups/restores, and create a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions. By doing all of this, we hope to have created a 
