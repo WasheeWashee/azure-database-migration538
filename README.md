@@ -20,7 +20,7 @@
 11. [Milestone 7: Microsoft Entra Directory Integration](#milestone7)
     1. [Microsoft Entra ID Integration with Azure SQL Database (Task 1)](#M7T1)
     2. [Creating a DB Reader User (Task 2)](#M7T2)
-13. [Closing Thoughts](#conclusion)
+13. [Final Thoughts](#conclusion)
 
 ### Introduction <a name="introduction"></a>
 The purpose of the Azure Database Migration Project is to gain experience with designing and implementing a cloud-based database system using Microsoft Azure. This involved the initial set up of the "Adventure Works" database in a provisioned Azure Virtual Machine, before migrating it into Azure's cloud system. Following this, we ensured the security of the uploaded database through data backups/restores, and created a development environment where we can test and experiment. The resilience of the environment would then be tested by simulating a disaster, and attempting to recover the "lost" data. We then established a backup copy of the database in a secondary region, adding an extra layer of data protection and availability. Finally, we managed user access by integrating Microsft Entra Directory to the SQL Database setup, creating a user, assigning it the DB Reader role, and verifying that it had the expected permissions. By doing this, we hope to have created a secure, highly available and flexible database system fit for purpose in a modern company looking to make a shift towards more cloud-based solutions.
@@ -74,7 +74,7 @@ CREATE CREDENTIAL datamigrationservercredential
 WITH IDENTITY = 'migrationprojectstorage'
 SECRET = '[my_access_key_here]'
 ```
-where [my_access_key_here] was replaced with the secret access key provided in the storage account. After running this, we can select **Management > Maintenance Plans**, right-click Maintenance Plans and select Maintenance Plan Wizard. Here, we can schedule the frequency, timing and type of backup that we want to occur - in this case, we chose a full backup to occur every Sunday at 12:00:00am. Then, we specified that it was the (restored) AdventureWorks2022 database that we wanted to back up, and selected the **"migrationprojectstorage"** storage account, and the **"data-migration-backup"** container as the location where the backup file should be stored. The rest of the settings were left as default, and the maintenance plan was put into place. We tested the maintenance plan by manually executing it, and we could see in the Azure portal that a backup file had been saved into the correct container as expected.
+where [my_access_key_here] was replaced with the secret access key provided in the storage account. After running this, we can select **Management > Maintenance Plans**, right-click Maintenance Plans and select Maintenance Plan Wizard. Here, we can schedule the frequency, timing and type of backup that we want to occur - in this case, we chose a full backup to occur every Sunday at 12:00am. Then, we specified that it was the (restored) AdventureWorks2022 database that we wanted to back up, and selected the **"migrationprojectstorage"** storage account, and the **"data-migration-backup"** container as the location where the backup file should be stored. The rest of the settings were left as default, and the maintenance plan was put into place. We tested the maintenance plan by manually executing it, and we could see in the Azure portal that a backup file had been saved into the correct container as expected.
 
 ### Milestone 5: Disaster Recovery Simulation <a name="milestone5"></a>
 
@@ -138,3 +138,6 @@ The DELETE permission was denied on the object 'Product', database 'migration-pr
 
 This confirms that the user does not have the permission to edit or delete any of the data, verifying that the newly created user has all of the expected permissions of the DB Reader role.
 
+### Final Thoughts <a name="conclusion"></a>
+
+In this project, we have utilised a wide variety of Microsoft Azure services in order to create a protected, reliable and flexible database system on the Cloud. The full details of the system's architecture can be found in the UML diagram, included within this repository. In doing so, we have not only gained experience with core Cloud Engineering tasks, but also learned about the importance of abiding by the key principles introduced to us in the course, like regular backups, RBAC, data validation etc. We hope that we can bring these benefits to any company looking to expand or transition into a cloud-based computing system, but the amount that has been learned is enough for me to label this project a success.
